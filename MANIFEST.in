@@ -1,0 +1,7 @@
+include LICENSE MANIFEST.in README.md CHANGELOG.md
+
+recursive-include requirements *
+
+recursive-include udata_csw *
+
+global-exclude *~ *.egg *.pyc
