@@ -1,9 +1,10 @@
 import logging
-from owslib.csw import CatalogueServiceWeb
 
 from udata.harvest.backends.base import BaseBackend
 from udata.models import Resource
 from udata.utils import faker
+
+from .csw_client import CswClient
 
 log = logging.getLogger(__name__)
 
@@ -12,10 +13,10 @@ class CswBackend(BaseBackend):
     display_name = 'csw'
 
     def initialize(self):
-        self.csw = CatalogueServiceWeb(self.source.url)
-        self.csw.getrecords2(maxrecords=10)
-        for identifier in self.csw.records.keys():
-            self.add_item(identifier)
+        self.csw = CswClient(self.source.url)
+        ids = self.csw.get_ids()
+        for id in ids:
+            self.add_item(id)
 
     def process(self, item):
         dataset = self.get_dataset(item.remote_id)
@@ -27,8 +28,7 @@ class CswBackend(BaseBackend):
         # - store extra significant data in the `extra` attribute
         # - map resources data
 
-        self.csw.getrecordbyid(id=[item.remote_id])
-        r = self.csw.records[item.remote_id]
+        r = self.csw.get_record(item.remote_id)
 
         dataset.title = r.title
         dataset.description = r.abstract
