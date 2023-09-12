@@ -1,4 +1,6 @@
 import logging
+import sys
+
 from owslib.csw import CatalogueServiceWeb
 
 log = logging.getLogger(__name__)
@@ -14,10 +16,12 @@ class CswClient(object):
     def url(self):
         return self._url
 
-    def get_ids(self, limit=0, page_size=10):
+    def get_ids(self, page_size=10, limit=None):
+        limit = limit or sys.maxsize
         fetched = 0
+
         while True:
-            maxrecords = min(limit - fetched, page_size) if limit else page_size
+            maxrecords = min(page_size, limit - fetched)
 
             log.debug(f"Fetching {maxrecords} ids from position {fetched}")
             self._csw.getrecords2(startposition=fetched, maxrecords=maxrecords, esn='brief')
@@ -27,8 +31,7 @@ class CswClient(object):
 
             limit = min(limit, self._csw.results['matches'])
 
-            # getrecords2 doesn't respect maxrecords param
-            ids = list(self._csw.records.keys())[:maxrecords]
+            ids = list(self._csw.records.keys())
             for i in ids:
                 yield i
 
