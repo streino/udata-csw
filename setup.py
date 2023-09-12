@@ -59,14 +59,6 @@ setup(
         'udata.harvesters': [
             'csw = udata_csw.harvesters:CswBackend',
         ],
-        
-        
-        
-        
-        
-        
-        
-        
     },
     license='AGPL',
     zip_safe=False,
