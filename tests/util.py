@@ -6,7 +6,7 @@ from udata.utils import faker
 
 _NS = Namespaces().get_namespaces()
 
-def to_xml(data, start=None, end=None):
+def csw_dc(data, start=None, end=None):
     rsp = ElementMaker(namespace=_NS['csw'], nsmap={x: _NS[x] for x in ['csw','xsi']})
     rec = ElementMaker(namespace=_NS['csw'], nsmap={x: _NS[x] for x in ['ows','dc']}) # 'geonet': 'http://www.fao.org/geonetwork'
     dc = ElementMaker(namespace=_NS['dc'])

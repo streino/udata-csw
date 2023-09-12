@@ -5,7 +5,7 @@ from udata.utils import faker
 from udata_csw.csw_client import CswClient
 
 from factories import CswRecordFactory
-from util import to_xml
+from util import csw_dc
 
 MAX_RECORDS = 5
 
@@ -19,7 +19,7 @@ def data(request):
 
 
 def test_get_ids(client, data, rmock):
-    rmock.post(client.url, status_code=200, text=to_xml(data))
+    rmock.post(client.url, status_code=200, text=csw_dc(data))
 
     ids = list(client.get_ids())
 
@@ -29,7 +29,7 @@ def test_get_ids(client, data, rmock):
 
 @pytest.mark.parametrize("page_size", range(1,MAX_RECORDS+1))
 def test_get_ids_pagination(client, data, rmock, page_size):
-    rmock.post(client.url, status_code=200, text=to_xml(data))
+    rmock.post(client.url, status_code=200, text=csw_dc(data))
 
     ids = list(client.get_ids(page_size=page_size))
 
@@ -38,7 +38,7 @@ def test_get_ids_pagination(client, data, rmock, page_size):
 
 @pytest.mark.parametrize("limit", range(1,MAX_RECORDS+1))
 def test_get_ids_limit(client, data, rmock, limit):
-    rmock.post(client.url, status_code=200, text=to_xml(data))
+    rmock.post(client.url, status_code=200, text=csw_dc(data))
 
     ids = list(client.get_ids(limit=limit))
 
