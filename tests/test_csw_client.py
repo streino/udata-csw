@@ -35,3 +35,12 @@ def test_get_ids_pagination(client, data, rmock, page_size):
 
     assert len(ids) == len(data)
     assert ids == [d.id for d in data]
+
+@pytest.mark.parametrize("limit", range(1,MAX_RECORDS+1))
+def test_get_ids_limit(client, data, rmock, limit):
+    rmock.post(client.url, status_code=200, text=to_xml(data))
+
+    ids = list(client.get_ids(limit=limit))
+
+    assert len(ids) == min(len(data), limit)
+    assert ids == [d.id for d in data[:limit]]

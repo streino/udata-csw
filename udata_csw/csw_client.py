@@ -22,10 +22,13 @@ class CswClient(object):
             log.debug(f"Fetching {maxrecords} ids from position {fetched}")
             self._csw.getrecords2(startposition=fetched, maxrecords=maxrecords, esn='brief')
 
-            ids = list(self._csw.records.keys())
-            if len(ids) == 0:
+            if self._csw.results['returned'] == 0:
                 break
 
+            limit = min(limit, self._csw.results['matches'])
+
+            # getrecords2 doesn't respect maxrecords param
+            ids = list(self._csw.records.keys())[:maxrecords]
             for i in ids:
                 yield i
 
