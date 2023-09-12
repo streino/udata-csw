@@ -19,12 +19,17 @@ def batched(iterable, n):
 
 _NS = Namespaces().get_namespaces()
 
+def ns(namespace):
+    return _NS[namespace]
 
-def csw_dc(data, matches=None):
-    rsp = ElementMaker(namespace=_NS['csw'], nsmap={x: _NS[x] for x in ['csw','xsi']})
-    rec = ElementMaker(namespace=_NS['csw'], nsmap={x: _NS[x] for x in ['ows','dc']}) # 'geonet': 'http://www.fao.org/geonetwork'
-    dc = ElementMaker(namespace=_NS['dc'])
-    ows = ElementMaker(namespace=_NS['ows'])
+def nsmap(*namespaces):
+    return {x: _NS[x] for x in namespaces}
+
+def csw_dc(data=[], matches=None):
+    rsp = ElementMaker(namespace=ns('csw'), nsmap=nsmap('csw','xsi'))
+    rec = ElementMaker(namespace=ns('csw'), nsmap=nsmap('ows','dc')) # 'geonet': 'http://www.fao.org/geonetwork'
+    dc = ElementMaker(namespace=ns('dc'))
+    ows = ElementMaker(namespace=ns('ows'))
 
     records = [
         rec.BriefRecord(
@@ -48,7 +53,7 @@ def csw_dc(data, matches=None):
              'numberOfRecordsReturned': str(len(records)),
              'elementSet': 'brief'}
         ),
-        {QName(_NS['xsi'], 'schemaLocation'): f"{_NS['csw']} http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd"}
+        {QName(ns('xsi'), 'schemaLocation'): f"{ns('csw')} http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd"}
     )
 
     xml = etree.tostring(tree, encoding='UTF-8', xml_declaration=True, pretty_print=True).decode('utf-8')
