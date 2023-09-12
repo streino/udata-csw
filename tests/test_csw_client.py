@@ -2,10 +2,10 @@ import pytest
 
 from udata.utils import faker
 
-from conftest import CswRecordFactory, to_xml
 from udata_csw.csw_client import CswClient
 
-TEST_URL = 'http://www.example.com/csw'
+from factories import CswRecordFactory
+from util import to_xml
 
 @pytest.fixture
 def client():
