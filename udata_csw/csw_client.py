@@ -7,7 +7,12 @@ log = logging.getLogger(__name__)
 class CswClient(object):
 
     def __init__(self, url, **kwargs):
-        self.csw = CatalogueServiceWeb(url, **kwargs)
+        self._url = url
+        self._csw = CatalogueServiceWeb(url, **kwargs)
+
+    @property
+    def url(self):
+        return self._url
 
     def get_ids(self, limit=0, page_size=10):
         fetched = 0
@@ -15,9 +20,9 @@ class CswClient(object):
             maxrecords = min(limit - fetched, page_size) if limit else page_size
 
             log.debug(f"Fetching {maxrecords} ids from position {fetched}")
-            self.csw.getrecords2(startposition=fetched, maxrecords=maxrecords, esn='brief')
+            self._csw.getrecords2(startposition=fetched, maxrecords=maxrecords, esn='brief')
 
-            ids = list(self.csw.records.keys())
+            ids = list(self._csw.records.keys())
             if len(ids) == 0:
                 break
 
@@ -29,5 +34,5 @@ class CswClient(object):
                 break
 
     def get_record(self, id):
-        self.csw.getrecordbyid([id])
-        return self.csw.records[id]
+        self._csw.getrecordbyid([id])
+        return self._csw.records[id]

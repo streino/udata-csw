@@ -1,6 +1,8 @@
+import factory
 import pytest
 
 from dataclasses import dataclass
+from decimal import Decimal
 from lxml import etree
 from lxml.etree import QName
 from lxml.builder import ElementMaker
@@ -20,30 +22,36 @@ def app():
 
 @dataclass
 class Bbox:
-    lower: str
-    upper: str
+    lower: tuple[Decimal]
+    upper: tuple[Decimal]
     crs: str
 
+class BboxFactory(factory.Factory):
+    class Meta:
+        model = Bbox
+
+    lower = factory.Faker('latlng')
+    upper = factory.Faker('latlng')
+    crs = 'urn:ogc:def:crs:EPSG:6.6:4326'
+
 @dataclass
-class Record:
+class CswRecord:
     id: str
     title: str
     type: str
     bbox: Bbox
 
-def RECORD():
-    return Record(
-        id = faker.uuid4(),
-        title = faker.sentence(),
-        type = 'dataset',
-        bbox = Bbox(
-            lower = f"{faker.numerify('##.###')} {faker.numerify('##.###')}",
-            upper = f"{faker.numerify('##.###')} {faker.numerify('##.###')}",
-            crs = 'urn:ogc:def:crs:EPSG:6.6:4326'
-        )
-    )
+class CswRecordFactory(factory.Factory):
+    class Meta:
+        model = CswRecord
 
-def XML(data, start=None, end=None):
+    id = factory.Faker('uuid4')
+    title = factory.Faker('sentence')
+    type = 'dataset'
+    bbox = factory.SubFactory(BboxFactory)
+
+
+def to_xml(data, start=None, end=None):
     ns = Namespaces().get_namespaces()
 
     rsp = ElementMaker(namespace=ns['csw'], nsmap={x: ns[x] for x in ['csw','xsi']})
@@ -57,8 +65,8 @@ def XML(data, start=None, end=None):
             dc.title(d.title),
             dc.type(d.type),
             ows.BoundingBox(
-                ows.LowerCorner(d.bbox.lower),
-                ows.UpperCorner(d.bbox.upper),
+                ows.LowerCorner('{0:.2f} {1:.2f}'.format(*d.bbox.lower)),
+                ows.UpperCorner('{0:.2f} {1:.2f}'.format(*d.bbox.upper)),
                 {'crs': d.bbox.crs}
             )
         )
