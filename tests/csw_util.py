@@ -3,17 +3,21 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from lxml.etree import Element, QName
 from udata.utils import faker
+from typing import Union
 
 from udata_csw.csw_client import ns
 
 from factories import CswRecord
+from util import as_iterable
 
 
 def nsmap(*namespaces: str) -> dict[str, str]:
     return {x: ns(x) for x in namespaces}
 
 
-def csw_dc(records: Iterable[CswRecord] = [], matches: int = None) -> str:
+def csw_dc(records: Union[CswRecord, Iterable[CswRecord]] = [], matches: int = None) -> str:
+    records = as_iterable(records)
+
     rsp = ElementMaker(namespace=ns('csw'), nsmap=nsmap('csw','xsi'))
     rec = ElementMaker(namespace=ns('csw'), nsmap=nsmap('ows','dc')) # 'geonet': 'http://www.fao.org/geonetwork'
     dc = ElementMaker(namespace=ns('dc'))

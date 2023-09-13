@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from itertools import islice
 
 
@@ -10,3 +11,8 @@ def batched(iterable, n):
     it = iter(iterable)
     while batch := tuple(islice(it, n)):
         yield batch
+
+
+def as_iterable(arg):
+    return arg if isinstance(arg, Iterable) else [arg]
+
