@@ -17,18 +17,11 @@ def csw_dc(records: Iterable[CswRecord] = [], matches: int = None) -> str:
     rsp = ElementMaker(namespace=ns('csw'), nsmap=nsmap('csw','xsi'))
     rec = ElementMaker(namespace=ns('csw'), nsmap=nsmap('ows','dc')) # 'geonet': 'http://www.fao.org/geonetwork'
     dc = ElementMaker(namespace=ns('dc'))
-    ows = ElementMaker(namespace=ns('ows'))
 
     recs = [
         rec.BriefRecord(
             dc.identifier(r.id),
-            dc.title(r.title),
-            dc.type(r.type),
-            ows.BoundingBox(
-                ows.LowerCorner('{0:.2f} {1:.2f}'.format(*r.bbox.lower)),
-                ows.UpperCorner('{0:.2f} {1:.2f}'.format(*r.bbox.upper)),
-                {'crs': r.bbox.crs}
-            )
+            dc.type(r.type)
         )
         for r in records
     ]
