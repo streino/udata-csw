@@ -32,7 +32,7 @@ def records(request):
 
 
 def test_get_ids_request(client, rmock):
-    rmock.post(client.url, status_code=200, text=csw_dc())
+    rmock.post(client.url, text=csw_dc())
 
     list(client.get_ids())
 
@@ -46,7 +46,7 @@ def test_get_ids_request(client, rmock):
 
 
 def test_get_ids_request_pagination(client, rmock):
-    rmock.post(client.url, status_code=200, text=csw_dc())
+    rmock.post(client.url, text=csw_dc())
 
     list(client.get_ids(page_size=5))
 
@@ -56,7 +56,7 @@ def test_get_ids_request_pagination(client, rmock):
 
 
 def test_get_ids_request_limit(client, rmock):
-    rmock.post(client.url, status_code=200, text=csw_dc())
+    rmock.post(client.url, text=csw_dc())
 
     list(client.get_ids(limit=3, page_size=10))
     list(client.get_ids(limit=10, page_size=7))
@@ -77,7 +77,7 @@ def test_get_ids(rmock, client, records, page_size, limit):
     matches = len(records)
     batches = list(batched(records, page_size)) if matches > 0 else [[]]  # at least one (empty) response
 
-    rmock.post(client.url, [{'status_code': 200, 'text': csw_dc(b, matches)} for b in batches])
+    rmock.post(client.url, [{'text': csw_dc(b, matches)} for b in batches])
 
     ids = list(client.get_ids(page_size=page_size, limit=limit))
 
@@ -105,7 +105,7 @@ def test_get_ids(rmock, client, records, page_size, limit):
 
 
 def test_get_record(rmock, client, record):
-    rmock.get(client.url, status_code=200, text=csw_gmd(record))
+    rmock.get(client.url, text=csw_gmd(record))
 
     r = client.get_record(record.id)
 
