@@ -3,10 +3,11 @@ import pytest
 from lxml import etree
 from udata.utils import faker
 
-from udata_csw.csw_client import CswClient
+from udata_csw.csw_client import CswClient, ns
 
+from csw_util import csw_dc, csw_gmd, nsmap
 from factories import CswRecordFactory
-from util import batched, csw_dc, ns, nsmap
+from util import batched
 
 
 MAX_RECORDS = 5  # less than default pagination - 1
@@ -20,8 +21,13 @@ def client():
     return CswClient(faker.url(), skip_caps=True)
 
 
+@pytest.fixture
+def record(request):
+    return CswRecordFactory()
+
+
 @pytest.fixture(params=RECORDS_VALUES)
-def data(request):
+def records(request):
     return CswRecordFactory.create_batch(request.param)
 
 
@@ -65,11 +71,11 @@ def test_get_ids_request_limit(client, rmock):
 
 @pytest.mark.parametrize("limit", LIMIT_VALUES)
 @pytest.mark.parametrize("page_size", PAGINATION_VALUES)
-def test_get_ids(client, data, rmock, page_size, limit):
+def test_get_ids(rmock, client, records, page_size, limit):
     if limit:
-        data = data[:limit]
-    matches = len(data)
-    batches = list(batched(data, page_size)) if matches > 0 else [[]]  # at least one (empty) response
+        records = records[:limit]
+    matches = len(records)
+    batches = list(batched(records, page_size)) if matches > 0 else [[]]  # at least one (empty) response
 
     rmock.post(client.url, [{'status_code': 200, 'text': csw_dc(b, matches)} for b in batches])
 
@@ -94,5 +100,14 @@ def test_get_ids(client, data, rmock, page_size, limit):
             else:
                 assert int(max_records[0]) == len(b)
 
-    assert len(ids) == len(data)
-    assert ids == [d.id for d in data]
+    assert len(ids) == len(records)
+    assert ids == [r.id for r in records]
+
+
+def test_get_record(rmock, client, record):
+    rmock.get(client.url, status_code=200, text=csw_gmd(record))
+
+    r = client.get_record(record.id)
+
+    assert r.identifier == record.id
+    assert r.identification[0].title == record.title
