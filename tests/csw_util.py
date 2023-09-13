@@ -1,16 +1,19 @@
+from collections.abc import Iterable
 from lxml import etree
 from lxml.builder import ElementMaker
-from lxml.etree import QName
+from lxml.etree import Element, QName
 from udata.utils import faker
 
 from udata_csw.csw_client import ns
 
+from factories import CswRecord
 
-def nsmap(*namespaces):
+
+def nsmap(*namespaces: str) -> dict[str, str]:
     return {x: ns(x) for x in namespaces}
 
 
-def csw_dc(records=[], matches=None):
+def csw_dc(records: Iterable[CswRecord] = [], matches: int = None) -> str:
     rsp = ElementMaker(namespace=ns('csw'), nsmap=nsmap('csw','xsi'))
     rec = ElementMaker(namespace=ns('csw'), nsmap=nsmap('ows','dc')) # 'geonet': 'http://www.fao.org/geonetwork'
     dc = ElementMaker(namespace=ns('dc'))
@@ -44,7 +47,7 @@ def csw_dc(records=[], matches=None):
     return to_xml(tree)
 
 
-def csw_gmd(record):
+def csw_gmd(record: CswRecord) -> str:
     rsp = ElementMaker(namespace=ns('csw'), nsmap=nsmap('csw'))
     gmd = ElementMaker(namespace=ns('gmd'), nsmap=nsmap(
         'gmd', 'gco', 'srv', 'gmx', 'gts', 'gsr', 'gmi', 'gml32', 'xlink', 'geonet', 'xsi'))
@@ -79,5 +82,9 @@ def csw_gmd(record):
     return to_xml(tree)
 
 
-def to_xml(tree):
-    return etree.tostring(tree, encoding='UTF-8', xml_declaration=True, pretty_print=True).decode('utf-8')
+def to_xml(tree: Element) -> str:
+    return (
+        etree
+        .tostring(tree, encoding='UTF-8', xml_declaration=True, pretty_print=True)
+        .decode('utf-8')
+    )

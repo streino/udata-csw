@@ -1,8 +1,11 @@
 import logging
 import sys
 
+from collections.abc import Iterable
 from owslib.csw import CatalogueServiceWeb
+from owslib.iso import MD_Metadata
 from owslib.namespaces import Namespaces
+from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -14,21 +17,21 @@ _NS = {
 }
 
 
-def ns(namespace):
+def ns(namespace: str) -> str:
     return _NS[namespace]
 
 
 class CswClient(object):
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url: str, **kwargs):
         self._url = url
         self._csw = CatalogueServiceWeb(url, **kwargs)
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._url
 
-    def get_ids(self, page_size=10, limit=None):
+    def get_ids(self, page_size: int = 10, limit: Optional[int] = None) -> Iterable[str]:
         log.debug(f"get_ids: page_size={page_size}, limit={limit}")
         limit = limit or sys.maxsize
         fetched = 0
@@ -55,7 +58,7 @@ class CswClient(object):
                 log.debug("stop: reached limit")
                 break
 
-    def get_record(self, id):
+    def get_record(self, id: str) -> MD_Metadata:
         # Output schema must be 'gmd' to get the full record
         self._csw.getrecordbyid(id=[id], esn='full', outputschema=ns('gmd'))
         return self._csw.records[id]

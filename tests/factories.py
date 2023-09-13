@@ -14,6 +14,7 @@ class BboxFactory(factory.Factory):
     class Meta:
         model = Bbox
 
+    # TODO: ensure lower/upper coherence
     lower = factory.Faker('latlng')
     upper = factory.Faker('latlng')
     crs = 'urn:ogc:def:crs:EPSG:6.6:4326'
