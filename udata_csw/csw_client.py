@@ -3,6 +3,7 @@ import sys
 
 from collections.abc import Iterable
 from owslib.csw import CatalogueServiceWeb
+from owslib.fes import OgcExpression
 from owslib.iso import MD_Metadata
 from owslib.namespaces import Namespaces
 from typing import Optional
@@ -31,8 +32,10 @@ class CswClient(object):
     def url(self) -> str:
         return self._url
 
-    def get_ids(self, page_size: int = 10, limit: Optional[int] = None) -> Iterable[str]:
+    def get_ids(self, constraints: Optional[list[OgcExpression]] = None, page_size: int = 10,
+                limit: Optional[int] = None) -> Iterable[str]:
         log.debug(f"get_ids: page_size={page_size}, limit={limit}")
+        constraints = constraints or []
         limit = limit or sys.maxsize
         fetched = 0
 
@@ -41,7 +44,7 @@ class CswClient(object):
 
             log.debug(f"fetching {maxrecords} ids from position {fetched}...")
             # Output schema 'csw' is lighter and enough to get ids
-            self._csw.getrecords2(startposition=fetched, maxrecords=maxrecords, esn='brief', outputschema=ns('csw'))
+            self._csw.getrecords2(constraints=constraints, startposition=fetched, maxrecords=maxrecords, esn='brief', outputschema=ns('csw'))
 
             if self._csw.results['returned'] == 0:
                 log.debug("stop: no results")

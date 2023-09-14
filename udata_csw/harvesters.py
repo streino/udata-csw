@@ -1,24 +1,41 @@
 import logging
 
-from udata.harvest.backends.base import BaseBackend
+from owslib.fes import OgcExpression
+from udata.harvest.backends.base import BaseBackend, HarvestFilter
 from udata.harvest.models import HarvestItem
+from udata.i18n import lazy_gettext as _
 from udata.models import Dataset, Resource
 from udata.utils import faker
 
 from .csw_client import CswClient
 
-log = logging.getLogger(__name__)
-
+_SUPPORTED_OGC_EXPRESSIONS = [
+    'And', 'Or', 'Not',
+    'PropertyIsEqualTo', 'PropertyIsNotEqualTo',
+    'PropertyIsLike', 'PropertyIsNull',
+    'PropertyIsLessThan', 'PropertyIsLessThanOrEqualTo',
+    'PropertyIsGreaterThan', 'PropertyIsGreaterThanOrEqualTo',
+    'PropertyIsBetween'
+]
+_mod = __import__('owslib.fes', fromlist=_SUPPORTED_OGC_EXPRESSIONS)
+_OGC_EXPRESSIONS = {
+    name: getattr(_mod, name) for name in _SUPPORTED_OGC_EXPRESSIONS
+}
 
 MAX_RECORDS = 25  # FIXME: testing only
 
+log = logging.getLogger(__name__)
 
 class CswBackend(BaseBackend):
     display_name = 'csw'
 
+    filters = [
+        HarvestFilter(_('OGC filter'), 'ogc_filters', str, _('OGC filter'))
+    ]
+
     def initialize(self):
         self.csw = CswClient(self.source.url)
-        ids = self.csw.get_ids(limit=MAX_RECORDS)
+        ids = self.csw.get_ids(constraints=self._get_constraints(), limit=MAX_RECORDS)
         for id in ids:
             self.add_item(id)
 
@@ -38,10 +55,7 @@ class CswBackend(BaseBackend):
         d.description = r.identification[0].abstract
         # TODO: complete
 
-        # FIXME: needed?
-        d.resources.clear()
-
-        # Needs at least one resource to be indexed
+        d.resources.clear()  # FIXME: needed?
         for rs in r.distribution.online:
             if not rs.url:  # FIXME
                 continue
@@ -53,3 +67,14 @@ class CswBackend(BaseBackend):
             ))
 
         return d
+
+    def _get_constraints(self):
+        return [
+            self._parse_ogc_filter(f['value'])
+            for f in self.get_filters()
+            if f['key'] == 'ogc_filters' and f.get('type') != 'exclude'
+        ]
+
+    def _parse_ogc_filter(self, expr: str) -> OgcExpression:
+        # FIXME: unsafe !!!
+        return eval(expr, None, _OGC_EXPRESSIONS)
