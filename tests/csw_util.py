@@ -3,16 +3,11 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from lxml.etree import Element, QName
 from udata.utils import faker
+from udata_csw.ows_util import qname, ns, nsmap
 from typing import Union
-
-from udata_csw.csw_client import ns
 
 from factories import CswRecord
 from util import as_iterable
-
-
-def nsmap(*namespaces: str) -> dict[str, str]:
-    return {x: ns(x) for x in namespaces}
 
 
 def csw_dc(records: Union[CswRecord, Iterable[CswRecord]] = [], matches: int = None) -> str:
@@ -38,7 +33,7 @@ def csw_dc(records: Union[CswRecord, Iterable[CswRecord]] = [], matches: int = N
              'numberOfRecordsReturned': str(len(recs)),
              'elementSet': 'brief'}
         ),
-        {QName(ns('xsi'), 'schemaLocation'): f"{ns('csw')} http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd"}
+        {qname('xsi:schemaLocation'): f"{ns('csw')} http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd"}
     )
 
     return to_xml(tree)
@@ -73,7 +68,7 @@ def csw_gmd(record: CswRecord) -> str:
                 )
             )
         ),
-        {QName(ns('xsi'), 'schemaLocation'): f"{ns('gmd')} http://schemas.opengis.net/csw/2.0.2/profiles/apiso/1.0.0/apiso.xsd"}
+        {qname('xsi:schemaLocation'): f"{ns('gmd')} http://schemas.opengis.net/csw/2.0.2/profiles/apiso/1.0.0/apiso.xsd"}
     )
 
     return to_xml(tree)

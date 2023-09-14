@@ -1,17 +1,17 @@
 import pytest
 
 from lxml import etree
-from lxml.etree import QName
 from os.path import join, dirname
 from udata.core.organization.factories import OrganizationFactory
 from udata.harvest import actions
 from udata.harvest.tests.factories import HarvestSourceFactory
 from udata.models import Dataset
 from udata.utils import faker
+from udata_csw.ows_util import qname, ns, nsmap
 
-from udata_csw.csw_client import ns
 from factories import CswRecordFactory
-from csw_util import csw_dc, nsmap
+from csw_util import csw_dc
+
 
 DATA_DIR = join(dirname(__file__), 'data')
 OGC_FILTER_XPATH = '/csw:GetRecords/csw:Query/csw:Constraint/ogc:Filter'
@@ -25,13 +25,6 @@ def from_file(filename):
 
 def record_from_file(catalog_id, record_id):
     return from_file(f"{catalog_id}--{record_id}")
-
-def ogc_qname(name):
-    return QName(ns('ogc'), name)
-
-def qname(tag):
-    namespace, name = tag.split(':')
-    return QName(ns(namespace), name)
 
 
 @pytest.fixture

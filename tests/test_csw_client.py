@@ -3,9 +3,10 @@ import pytest
 from lxml import etree
 from udata.utils import faker
 
-from udata_csw.csw_client import CswClient, ns
+from udata_csw.csw_client import CswClient
+from udata_csw.ows_util import ns, nsmap
 
-from csw_util import csw_dc, csw_gmd, nsmap
+from csw_util import csw_dc, csw_gmd
 from factories import CswRecordFactory
 from util import batched
 

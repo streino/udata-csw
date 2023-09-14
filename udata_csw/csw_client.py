@@ -6,20 +6,10 @@ from owslib.csw import CatalogueServiceWeb
 from owslib.fes import OgcExpression
 from owslib.iso import MD_Metadata
 from owslib.namespaces import Namespaces
+from udata_csw.ows_util import ns
 from typing import Optional
 
 log = logging.getLogger(__name__)
-
-
-_NS = {
-    **Namespaces().get_namespaces(),
-    'geonet': 'http://www.fao.org/geonetwork',
-    'gsr': 'http://www.isotc211.org/2005/gsr'
-}
-
-
-def ns(namespace: str) -> str:
-    return _NS[namespace]
 
 
 class CswClient(object):
