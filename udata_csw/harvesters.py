@@ -57,12 +57,12 @@ class CswBackend(BaseBackend):
 
         d.resources.clear()  # FIXME: needed?
         for rs in r.distribution.online:
-            if not rs.url:  # FIXME
+            if not rs.url:  # FIXME?
                 continue
             d.resources.append(Resource(
+                url = rs.url,
                 title = rs.name,
-                description = rs.description,
-                url = rs.url
+                description = rs.description
                 # TODO: complete
             ))
 
