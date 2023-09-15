@@ -48,7 +48,7 @@ setup(
     author='streino',
     author_email='streino@disroot.org',
     packages=find_packages(),
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     include_package_data=True,
     install_requires=install_requires,
     tests_require=tests_require,

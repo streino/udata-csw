@@ -1,5 +1,7 @@
 import pytest
 
+from collections.abc import Iterable
+from datetime import datetime
 from lxml import etree
 from os.path import join, dirname
 from udata.core.organization.factories import OrganizationFactory
@@ -27,6 +29,9 @@ def from_file(filename):
 
 def record_from_file(catalog_id, record_id):
     return from_file(f"{catalog_id}--{record_id}")
+
+def map_datasets() -> dict[str, Dataset]:
+    return {d.harvest.remote_id: d for d in Dataset.objects}
 
 
 @pytest.fixture
@@ -68,15 +73,17 @@ def test_harvest(rmock, url):
 
     job = source.get_last_job()
     assert job.status == 'done'
-    assert len(job.items) == 2
 
-    datasets = {d.harvest.remote_id: d for d in Dataset.objects}
+    datasets = map_datasets()
     assert len(datasets) == 2
 
-    d: Dataset = datasets['5b956140-1351-4ae6-8b95-bb424eab96ce']
+    d = datasets['5b956140-1351-4ae6-8b95-bb424eab96ce']
     assert d.title == '0-Distribution des espèces invertébrés benthiques observées par les campagnes halieutiques en Atlantique'
     assert d.description.startswith('Distribution des espèces invertébrés benthiques en Atlantique')
     assert d.description.endswith('NURSE (2000-2013), ORHAGO (2011-2015)')
+    # assert set(d.tags) == set()  TODO
+    assert d.harvest.created_at == datetime(2016, 9, 27)
+    assert d.harvest.modified_at == None
     assert len(d.resources) == 8
     assert d.resources[0].url == 'http://atlasbenthal.ifremer.fr'
     assert d.resources[0].title == 'Atlas Benthal'
@@ -93,6 +100,9 @@ def test_harvest(rmock, url):
     assert d.title == 'The GEBCO_2020 Grid - A continuous terrain model of the global oceans and land'
     assert d.description.startswith('The GEBCO_2020 Grid was released in May 2020')
     assert d.description.endswith('(https://www.gebco.net/data_and_products/gridded_bathymetry_data/gebco_2020/#compilations).')
+    # assert set(d.tags) == set()  TODO
+    assert d.harvest.created_at == datetime(2020, 1, 1)
+    assert d.harvest.modified_at == None
     assert len(d.resources) == 7
     assert d.resources[0].url == 'https://seabed2030.org/'
     assert d.resources[0].title == 'SeaBed 2030 website'
@@ -104,6 +114,83 @@ def test_harvest(rmock, url):
     assert d.resources[6].url == 'https://emodnet.ec.europa.eu/geoviewer'
     assert d.resources[6].title == 'EMODnet viewer'
     assert d.resources[6].description == None
+
+
+@pytest.mark.catalog('fake')
+@pytest.mark.harvest('title-title-only', 'title-alternate-only', 'title-both')
+def test_harvest_title(rmock, url):
+    org = OrganizationFactory()
+    source = HarvestSourceFactory(backend='csw', url=url, organization=org)
+
+    actions.run(source.slug)
+    source.reload()
+
+    job = source.get_last_job()
+    assert job.status == 'done'
+
+    datasets = map_datasets()
+    assert len(datasets) == 3
+
+    assert datasets['title-title-only'].title == 'Title'
+    assert datasets['title-alternate-only'].title == 'Alternate title'
+    assert datasets['title-both'].title == 'Title'
+
+
+@pytest.mark.catalog('fake')
+@pytest.mark.harvest('keywords')
+def test_harvest_keywords(rmock, url):
+    org = OrganizationFactory()
+    source = HarvestSourceFactory(backend='csw', url=url, organization=org)
+
+    actions.run(source.slug)
+    source.reload()
+
+    job = source.get_last_job()
+    assert job.status == 'done'
+
+    datasets = map_datasets()
+    assert len(datasets) == 1
+
+    d = datasets['keywords']
+    assert set(d.tags) == set([
+        'keyword-a-1', 'keyword-a-2', 'keyword-b-1', 'keyword-b-2',
+        'keyword-c-1', 'keyword-c-2', 'keyword-d-1', 'keyword-d-2'])
+    assert set(d.extras['iso:keywords']) == set([
+        'Keyword A 1', 'Keyword A 2', 'Keyword B 1', 'Keyword B 2'])
+    assert set(d.extras['iso:keywords:theme']) == set([
+        'Keyword C 1', 'Keyword C 2', 'Keyword D 1', 'Keyword D 2'])
+
+
+@pytest.mark.catalog('fake')
+@pytest.mark.harvest('dates-creation-only', 'dates-publication-only',
+    'dates-creation-publication', 'dates-revision', 'dates-all')
+def test_harvest_dates(rmock, url):
+    org = OrganizationFactory()
+    source = HarvestSourceFactory(backend='csw', url=url, organization=org)
+
+    actions.run(source.slug)
+    source.reload()
+
+    job = source.get_last_job()
+    assert job.status == 'done'
+
+    datasets = map_datasets()
+    assert len(datasets) == 5
+
+    assert datasets['dates-creation-only'].harvest.created_at == datetime(2020, 2, 3, 11, 12)
+    assert datasets['dates-creation-only'].harvest.modified_at == None
+
+    assert datasets['dates-publication-only'].harvest.created_at == datetime(2021, 4, 5, 13, 14)
+    assert datasets['dates-publication-only'].harvest.modified_at == None
+
+    assert datasets['dates-creation-publication'].harvest.created_at == datetime(2020, 2, 3, 11, 12)
+    assert datasets['dates-creation-publication'].harvest.modified_at == None
+
+    assert datasets['dates-revision'].harvest.created_at == None
+    assert datasets['dates-revision'].harvest.modified_at == datetime(2022, 6, 7, 15, 16)
+
+    assert datasets['dates-all'].harvest.created_at == datetime(2020, 2, 3, 11, 12)
+    assert datasets['dates-all'].harvest.modified_at == datetime(2022, 6, 7, 15, 16)
 
 
 def test_filter_simple(rmock, url):

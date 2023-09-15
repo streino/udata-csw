@@ -15,4 +15,3 @@ def batched(iterable, n):
 
 def as_iterable(arg):
     return arg if isinstance(arg, Iterable) else [arg]
-
